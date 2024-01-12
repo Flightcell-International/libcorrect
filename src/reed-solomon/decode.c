@@ -296,7 +296,7 @@ void correct_reed_solomon_decoder_create(correct_reed_solomon *rs) {
     rs->init_from_roots_scratch[1] = polynomial_create(rs->min_distance);
 }
 
-ssize_t correct_reed_solomon_decode(correct_reed_solomon *rs, const uint8_t *encoded, size_t encoded_length,
+int correct_reed_solomon_decode(correct_reed_solomon *rs, const uint8_t *encoded, size_t encoded_length,
                                     uint8_t *msg) {
     if (encoded_length > rs->block_length) {
         return -1;
@@ -338,7 +338,7 @@ ssize_t correct_reed_solomon_decode(correct_reed_solomon *rs, const uint8_t *enc
         for (unsigned int i = 0; i < msg_length; i++) {
             msg[i] = rs->received_polynomial.coeff[encoded_length - (i + 1)];
         }
-        return msg_length;
+        return 0;
     }
 
     unsigned int order = reed_solomon_find_error_locator(rs, 0);
@@ -371,14 +371,19 @@ ssize_t correct_reed_solomon_decode(correct_reed_solomon *rs, const uint8_t *enc
             field_sub(rs->field, rs->received_polynomial.coeff[rs->error_locations[i]], rs->error_vals[i]);
     }
 
+    int errors = 0;
     for (unsigned int i = 0; i < msg_length; i++) {
+        uint8_t orig = msg[i];
         msg[i] = rs->received_polynomial.coeff[encoded_length - (i + 1)];
+        if (msg[i] != orig) {
+            errors++;
+        }
     }
 
-    return msg_length;
+    return errors;
 }
 
-ssize_t correct_reed_solomon_decode_with_erasures(correct_reed_solomon *rs, const uint8_t *encoded,
+int correct_reed_solomon_decode_with_erasures(correct_reed_solomon *rs, const uint8_t *encoded,
                                                   size_t encoded_length, const uint8_t *erasure_locations,
                                                   size_t erasure_length, uint8_t *msg) {
     if (!erasure_length) {
@@ -439,7 +444,7 @@ ssize_t correct_reed_solomon_decode_with_erasures(correct_reed_solomon *rs, cons
         for (unsigned int i = 0; i < msg_length; i++) {
             msg[i] = rs->received_polynomial.coeff[encoded_length - (i + 1)];
         }
-        return msg_length;
+        return 0;
     }
 
     reed_solomon_find_modified_syndromes(rs, rs->syndromes, rs->erasure_locator, rs->modified_syndromes);
@@ -497,12 +502,18 @@ ssize_t correct_reed_solomon_decode_with_erasures(correct_reed_solomon *rs, cons
 
     rs->error_locator = placeholder_poly;
 
+    ssize_t errors = 0;
     for (unsigned int i = 0; i < msg_length; i++) {
+        uint8_t orig = msg[i];
         msg[i] = rs->received_polynomial.coeff[encoded_length - (i + 1)];
+        if (msg[i] != orig) {
+            printf("error at %d\n", i);
+            errors++;
+        }
     }
 
     polynomial_destroy(temp_poly);
     free(syndrome_copy);
 
-    return msg_length;
+    return errors;
 }

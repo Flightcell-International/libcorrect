@@ -48,13 +48,13 @@ void encode_rs_char(void *rs, const unsigned char *msg, unsigned char *parity) {
     memcpy(parity, shim->msg_out + shim->msg_length, shim->num_roots);
 }
 
-void decode_rs_char(void *rs, unsigned char *block, int *erasure_locations,
+int decode_rs_char(void *rs, unsigned char *block, int *erasure_locations,
                     int num_erasures) {
     reed_solomon_shim *shim = (reed_solomon_shim *)rs;
     for (int i = 0; i < num_erasures; i++) {
         shim->erasures[i] = (uint8_t)(erasure_locations[i]) - shim->pad;
     }
-    correct_reed_solomon_decode_with_erasures(shim->rs, block, shim->block_length,
+    return (int) correct_reed_solomon_decode_with_erasures(shim->rs, block, shim->block_length,
                                               shim->erasures, num_erasures,
                                               block);
 }

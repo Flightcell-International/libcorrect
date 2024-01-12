@@ -232,7 +232,7 @@ ssize_t correct_reed_solomon_encode(correct_reed_solomon *rs, const uint8_t *msg
  * This function returns a positive number of bytes written to msg
  * if it has decoded or -1 if it has encountered an error.
  */
-ssize_t correct_reed_solomon_decode(correct_reed_solomon *rs, const uint8_t *encoded,
+int correct_reed_solomon_decode(correct_reed_solomon *rs, const uint8_t *encoded,
                                     size_t encoded_length, uint8_t *msg);
 
 /* correct_reed_solomon_decode_with_erasures uses the rs
@@ -262,7 +262,7 @@ ssize_t correct_reed_solomon_decode(correct_reed_solomon *rs, const uint8_t *enc
  * This function returns a positive number of bytes written to msg
  * if it has decoded or -1 if it has encountered an error.
  */
-ssize_t correct_reed_solomon_decode_with_erasures(correct_reed_solomon *rs, const uint8_t *encoded,
+int correct_reed_solomon_decode_with_erasures(correct_reed_solomon *rs, const uint8_t *encoded,
                                                   size_t encoded_length,
                                                   const uint8_t *erasure_locations,
                                                   size_t erasure_length, uint8_t *msg);
